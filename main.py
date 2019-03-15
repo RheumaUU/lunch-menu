@@ -33,12 +33,14 @@ Main script for choosing what restaurant parsers to use
 
 import os
 import sys
+import requests
+import json
 
 import parser as ps
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 REST_FILENAME = os.path.join(__location__, 'restaurants.txt')
-
+SLACK_HOOK = os.path.join(__location__, 'slackhook.txt')
 
 # works as ordered dict as well, but must be _ordered_
 MAPPER = (('jorpes', ps.parse_jorpes), ('glada', ps.parse_glada),
@@ -102,11 +104,11 @@ def page_end():
     Print the closure of tags etc
     '''
     lines = list()
-    lines.append('<div class="endnote">Code available at ' +
-                 '<a href="https://github.com/talavis/lunch-menu">' +
-                 'Github</a>. Patches are very welcome.</div>')
-    lines.append('</body>')
-    lines.append('</html>')
+    #lines.append('<div class="endnote">Code available at ' +
+    #             '<a href="https://github.com/talavis/lunch-menu">' +
+    #             'Github</a>. Patches are very welcome.</div>')
+    #lines.append('</body>')
+    #lines.append('</html>')
     return lines
 
 
@@ -115,14 +117,14 @@ def page_start(weekday, day, month):
     Print the initialisation of the page
     '''
     lines = list()
-    lines.append('<html>')
-    lines.append('<head>')
+    #lines.append('<html>')
+    #lines.append('<head>')
     date = ps.fix_for_html(weekday.capitalize() + ' ' + str(day) + ' ' + str(month))
-    lines.append('<title>Dagens mat - {}</title>'.format(date))
-    lines.append('<link href="styles.css" rel="stylesheet" type="text/css">')
-    lines.append('<style type="text/css"></style>')
-    lines.append('</head>')
-    lines.append('<body>')
+    lines.append('*Dagens mat - {}*'.format(date))
+    #lines.append('<link href="styles.css" rel="stylesheet" type="text/css">')
+    #lines.append('<style type="text/css"></style>')
+    #lines.append('</head>')
+    #lines.append('<body>')
     # page formatting
     lines.append('')
     return lines
@@ -162,12 +164,16 @@ def read_restaurants(intext):
         restaurants.append(line.rstrip().split('\t'))
     return restaurants
 
+def post_slack(url,txt):
+    post_payload = {"text": txt, "icon_emoji": ":bento:"}
+    post_response = requests.post(url, data=json.dumps(post_payload))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or '-h' in sys.argv:
         print_usage((x[0] for x in MAPPER))
         sys.exit()
 
+    HOOKURL = open(SLACK_HOOK).read()
     RESTAURANT_DATA = read_restaurants(open(REST_FILENAME).read())
     if 'all' in sys.argv[1:]:
         REST_NAMES_IN = (x[0] for x in MAPPER)
@@ -182,6 +188,10 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # print the menus
-    print('\n'.join(page_start(ps.get_weekday(), str(ps.get_day()), ps.get_month())))
-    print(activate_parsers(REST_NAMES, RESTAURANT_DATA))
-    print('\n'.join(page_end()))
+    #print('\n'.join(page_start(ps.get_weekday(), str(ps.get_day()), ps.get_month())))
+    #print(activate_parsers(REST_NAMES, RESTAURANT_DATA))
+    #print('\n'.join(page_end()))
+    menu = '\n'.join(page_start(ps.get_weekday(), str(ps.get_day()), ps.get_month())) + "\n" + activate_parsers(REST_NAMES, RESTAURANT_DATA)
+    print(menu)
+    print(HOOKURL)
+    post_slack(HOOKURL,menu)

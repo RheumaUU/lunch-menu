@@ -193,7 +193,7 @@ def parse_dufva(resdata):
             continue
         if started:
             if line[0] != '-':
-                lines.append(line.strip() + '<br/>')
+                lines.append(line.strip())
             else:
                 break
     lines += restaurant_end()
@@ -265,7 +265,7 @@ def parse_hubben(resdata):
     current = days[get_weekdigit()]
     dishes = current.find_all('div', {'class': 'element description col-md-4 col-print-5'})
     for dish in dishes:
-        lines.append(dish.get_text().strip().replace('\n', ' ') + '<br/>')
+        lines.append(dish.get_text().strip().replace('\n', ' '))
     lines += restaurant_end()
     return lines
 
@@ -327,7 +327,7 @@ def parse_karolina(resdata):
                 lines.append(line)
                 if not line.isupper():
                     lines.append('<br/>')
-                
+
     except Exception as err:
         sys.stderr.write(str(err) + '\n')
 
@@ -436,7 +436,7 @@ def parse_rudbeck(resdata):
     day = days[get_weekdigit()]
     dishes = day.find_all('span')[3:]
     for dish in dishes:
-        lines.append(dish.get_text().strip() + '<br/>')
+        lines.append(dish.get_text().strip())
 
     lines += restaurant_end()
     return lines
@@ -474,8 +474,9 @@ def restaurant_end():
     Finish the tags after the listing of the menu of a restaurant
     '''
     lines = list()
-    lines.append('</p>')
-    lines.append('</div>')
+    # lines.append('</p>')
+    # lines.append('</div>')
+    lines.append('')
     return lines
 
 
@@ -484,11 +485,12 @@ def restaurant_start(restaurant, location, home_url, mapurl):
     Start the listing of the menu of a restaurant
     '''
     lines = list()
-    lines.append('<!--{}-->'.format(restaurant))
-    lines.append('<div class="title"><a href="{url}"> {rest}</a>'.format(rest=restaurant,
-                                                                         url=home_url) +
-                 ' (<a href="{murl}">{loc}</a>)</div>'.format(loc=location,
-                                                              murl=mapurl))
-    lines.append('<div class="menu">')
-    lines.append('<p>')
+    # lines.append('<!--{}-->'.format(restaurant))
+    # lines.append('<div class="title"><a href="{url}"> {rest}</a>'.format(rest=restaurant,
+    #                                                                      url=home_url) +
+    #              ' (<a href="{murl}">{loc}</a>)</div>'.format(loc=location,
+    #                                                           murl=mapurl))
+    # lines.append('<div class="menu">')
+    # lines.append('<p>')
+    lines.append('_{}_'.format(restaurant))
     return lines
